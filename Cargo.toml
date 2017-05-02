@@ -1,5 +1,5 @@
 [package]
-name = "mphgp"
+name = "rusty-gp"
 version = "0.0.1"
 authors = ["Bernardo Galvão <bernardogcgalvao@gmail.com>"]
 

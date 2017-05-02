@@ -1,5 +1,5 @@
 [root]
-name = "mphgp"
+name = "rusty-gp"
 version = "0.0.1"
 dependencies = [
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
