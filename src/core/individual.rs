@@ -149,7 +149,7 @@ impl Individual {
         let sems = self.train_semantics.clone(); // by cloning, you are not immutably borrowing self ;)
         self.train = Some(rmse(sems.unwrap(), data.train_targets().to_vec()));
 
-        let sems = self.train_semantics.clone(); // by cloning, you are not immutably borrowing self ;)
+        let sems = self.test_semantics.clone(); // by cloning, you are not immutably borrowing self ;)
         self.test = Some(rmse(sems.unwrap(), data.test_targets().to_vec()));
 
         self.compute_depth(); // and this guy can safely mutably borrow self ;)

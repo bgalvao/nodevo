@@ -8,12 +8,11 @@ use core::gp::GP;
 use core::data::Data;
 
 fn main() {
-    println!("\n\nIt compiled!\n\n");
 
-    let ds = Data::new();
+    let ds = Data::new("yacht");
+
     let mut gp = GP::default_new(ds);
     gp.init();
     gp.evolve(100);
-
 
 }
