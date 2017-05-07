@@ -1,18 +1,29 @@
 # Rusty Genetic Programming (rusty-gp)
 An implementation of Genetic Programming in Rust. This one pertains to symbolic regression.
 
-## Notes from the author
-I just started out programming in Rust and the best way to learn a new programming language is to implement something in it. Since I am mostly acquainted with Genetic Programming and am researching in it, I thought this would be the best way to learn it. That being said, the first implementation is just to get things going! - if this notice is still here, there's still work to be done: with time and knowledge I will definitely optimize the code for speed, readability and proper use of Rust idioms like the Rust gods intended them to be used :).
-
 ## OK, but what in the world is Genetic Programming?
-It's an evolutionary machine learning algorithm. To get an overall view of how it works, click [here](http://geneticprogramming.com/tutorial/). To just know what it is about, click [here](http://geneticprogramming.com/).
+It's an evolutionary supervised machine learning algorithm. It evolves a population of programs (in this case, a mathematical function) that best maps inputs to outputs.
+- to get an overall view of how it works, click [here](http://geneticprogramming.com/tutorial/).
 
 ## Can I get this running out of the box?
-Not just yet... I need to find a dataset that I can freely use as demo without any issues. Feel free to propose one!
+Yes you can. I included the [yacht dataset](http://archive.ics.uci.edu/ml/datasets/yacht+hydrodynamics) so that there is some data to run on. Credited to the UCI repository:
+- Lichman, M. (2013). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.
+
+## How to get this running?
+After [installing](https://www.rust-lang.org/en-US/install.html) Rust on your machine, clone this repo, `cd` into it and run the commands. Something like:
+```
+git clone https://github.com/bernardo-galvao/rusty-gp.git
+cd rusty-gp
+cargo build --release
+cargo run
+```
 
 ### Some cool resources used to learn Rust
 - https://doc.rust-lang.org/book/getting-started.html.
 - The awesome [/r/rust](www.reddit.com/r/rust) community!
+
+## Notes from the author
+I just started out programming in Rust and the best way to learn a new programming language is to implement something in it. Since I am mostly acquainted with Genetic Programming and am researching in it, I thought this would be the best way to learn it. That being said, this is a work in progress. - with time and knowledge optimize the code will be optimized.
 
 ## TODO
 The top priorities are opened in the [Issues](https://github.com/bernardo-galvao/rusty-gp/issues) section. However, given that the author has some goals related to his thesis, it is worth pointing out his plan here.
