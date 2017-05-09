@@ -1,19 +1,17 @@
-use rand::{thread_rng, Rng};
-
 use core::data::Data;
 use core::node::Node;
 use core::utils::rmse;
+use rand::{thread_rng, Rng};
 
 #[derive(Debug, Clone)]
 /// The struct to represent an individual in a `Population`
 pub struct Individual {
-    /// The attribute `core` holds the mathematical function composed by nodes.
-    /// The core is the tree structure representation of an `Individual`.
-    core: Vec<Node>,
+    core: Vec<Node>, // the author ponders: "to have or not to have an option"
     train_semantics: Option<Vec<f32>>,
     test_semantics: Option<Vec<f32>>,
     train: Option<f32>,
     test: Option<f32>,
+    size: Option<usize>,
     depth: Option<usize>
 }
 
@@ -23,16 +21,34 @@ impl Individual {
     pub fn clone_core(&self) -> Vec<Node> {self.core.clone()}
     // returning self.core gives you a "cannot move out of borrowed content".
     // meaning that you're trying to pull it out "movingly".
-    // this operation is used for grow() trees of max_depth 6, so cloning it should be chead.
+    // this operation is used for grow() trees of max_depth 6, so cloning it should be cheap.
 
     pub fn train(&self) -> Option<f32> {self.train}
     pub fn test(&self) -> Option<f32> {self.test}
-    pub fn size(&self) -> usize {self.core.len()}
-    pub fn depth(&self) -> Option<usize> {self.depth}
 
-    // TODO use this for geometric semantic genetic programming, otherwise it's dead code.
-    //pub fn train_semantics(&self) -> &Option<Vec<f32>> {&self.train_semantics}
-    //pub fn test_semantics(&self) -> &Option<Vec<f32>> {&self.test_semantics}
+    pub fn size(&self) -> usize { // I think this will be better if returning a Result..
+        if self.core.len() > 0 {
+            return self.core.len()
+        } else {
+            self.size.expect("Size is not computed, while Vec<Node> is empty.")
+        }
+    }
+
+    pub fn depth(&self) -> usize {
+        self.depth.expect("Depth not computed.")
+    }
+
+    pub fn train_semantics(&self) -> Vec<f32> {
+        self.train_semantics.clone().expect("Train data semantics not computed.")
+    }
+
+    pub fn test_semantics(&self) -> Vec<f32> {
+        self.test_semantics.clone().expect("Test data semantics not computed.")
+    }
+
+    pub fn semantics(&self) -> (Vec<f32>, Vec<f32>) {
+        (self.train_semantics(), self.test_semantics())
+    }
 
     /*
     The process of creating a new individual:
@@ -60,30 +76,16 @@ impl Individual {
             test_semantics: None,
             train: None,
             test: None,
+            size: None,
             depth: None
         }
     }
 
     /// Generate a random individual using full method.
-    /// If using this method to grow a subtree of a tree, i.e. performing mutation,
-    /// then one does not care about its quality in training error, test error, etc, in which
-    /// case `data_option: None` ought to be passed. Otherwise, full evaluation of the individual is performed
-    /// via the `evaluate` method.
-    pub fn full(max_depth: usize, data_dims: usize, data_option: Option<&Data>) -> Individual {
+    pub fn full(max_depth: usize, data_ref: &Data) -> Individual {
         let mut i: Individual = Individual::new();
-        match data_option {
-            Some(data_ref) => {
-                i.inner_full(0, max_depth, data_dims);
-                i.evaluate(data_ref);
-                i
-            },
-            None => {
-                // perhaps an Option never used.
-                // does not collect Individual.train nor Individual.test
-                i.inner_full(0, max_depth, data_dims);
-                i
-            },
-        }
+        i.inner_full(0, max_depth, data_ref.dims());
+        i
     }
 
     fn inner_full(&mut self, current_depth: usize, max_depth: usize, data_dims: usize) {
@@ -101,25 +103,10 @@ impl Individual {
     }
 
     /// Generate a random individual using grow method.
-    /// If using this method to grow a subtree of a tree, i.e. performing mutation,
-    /// then one does not care about its quality in training error, test error, etc, in which
-    /// case `data_option: None` ought to be passed. Otherwise, full evaluation of the individual is performed
-    /// via the `evaluate` method.
-    pub fn grow(max_depth: usize, data_dims: usize, data_option: Option<&Data>) -> Individual {
+    pub fn grow(max_depth: usize, data_ref: &Data) -> Individual {
         let mut i: Individual = Individual::new();
-        match data_option {
-            Some(data_ref) => {
-                i.inner_grow(0, max_depth, data_dims);
-                i.evaluate(data_ref);
-                i
-            },
-            None => {
-                // perhaps an Option never used.
-                // does not collect Individual.train nor Individual.test
-                i.inner_grow(0, max_depth, data_dims);
-                i
-            },
-        }
+        i.inner_grow(0, max_depth, data_ref.dims());
+        i
     }
 
     fn inner_grow(&mut self, current_depth: usize, max_depth: usize, data_dims: usize) {
@@ -142,27 +129,30 @@ impl Individual {
         }
     }
 
-    pub fn evaluate(&mut self, data: &Data) {
-        self.train_semantics = Some(self.output(0, data.train()));
-        self.test_semantics = Some(self.output(0, data.test()));
-
-        let sems = self.train_semantics.clone(); // by cloning, you are not immutably borrowing self ;)
-        self.train = Some(rmse(sems.unwrap(), data.train_targets().to_vec()));
-
-        let sems = self.test_semantics.clone(); // by cloning, you are not immutably borrowing self ;)
-        self.test = Some(rmse(sems.unwrap(), data.test_targets().to_vec()));
-
-        self.compute_depth(); // and this guy can safely mutably borrow self ;)
-        //println!("train: {:?} :::: test: {:?}", self.train, self.test);
-    }
-
     fn get(&mut self, idx: usize) -> Node {
         self.core[idx].clone()
-        // without the clone(), the compiler throws me a:
-        // "cannot move out of indexed content". I.e. with move semantics,
-        // trying to simply return self.core[idx] is equivalent to pulling out the
-        // Node out of self.core! So in order not to pull it out ~ move!, we instead
-        // return a clone of it.
+    }
+
+    pub fn prepend_node(&mut self, node: Node) {
+        self.core.insert(0, node);
+    }
+
+    pub fn compute_depth(&mut self) {
+        let ref mut node_idx = 0; // Q: a reference to a mutable usize, or a mutable reference to a usize? A: FORMER
+        let ref initial_depth = 0; // a reference to a usize
+        self.depth = Some(0);
+        self.inner_compute_depth(node_idx, initial_depth);
+    }
+
+    fn inner_compute_depth(&mut self, idx: &mut usize, current_depth: &usize) {
+        // println!("idx: {} ::: depth: {} ::: node: {:?}", idx, current_depth, self.core[*idx]);
+        for _child_node in 0..self.core[*idx].arity() {
+            *idx += 1;
+            self.inner_compute_depth(idx, &(current_depth + 1));
+        }
+        if *current_depth > self.depth.unwrap() {
+            self.depth = Some(*current_depth);
+        }
     }
 
     fn output(&mut self, mut idx: usize, df: &Vec<Vec<f32>>) -> Vec<f32> {
@@ -181,27 +171,14 @@ impl Individual {
         }
     }
 
-    pub fn compute_depth(&mut self) {
-        match self.depth {
-            None => {
-                let ref mut node_idx = 0; // Q: a reference to a mutable usize, or a mutable reference to a usize? A: FORMER
-                let ref initial_depth = 0; // a reference to a usize
-                self.depth = Some(0);
-                self.inner_compute_depth(node_idx, initial_depth);
-            },
-            Some(d) => println!("Depth is computed and is {:?}", d),
-        }
+    pub fn compute_semantics(&mut self, data: &Data) {
+        self.train_semantics = Some(self.output(0, data.train()));
+        self.test_semantics = Some(self.output(0, data.test()));
     }
 
-    fn inner_compute_depth(&mut self, idx: &mut usize, current_depth: &usize) {
-        // println!("idx: {} ::: depth: {} ::: node: {:?}", idx, current_depth, self.core[*idx]);
-        for _child_node in 0..self.core[*idx].arity() {
-            *idx += 1;
-            self.inner_compute_depth(idx, &(current_depth + 1));
-        }
-        if *current_depth > self.depth.unwrap() {
-            self.depth = Some(*current_depth);
-        }
+    pub fn evaluate(&mut self, data: &Data) {
+        self.train = Some(rmse(&self.train_semantics(), data.train_targets()));
+        self.test = Some(rmse(&self.test_semantics(), data.test_targets()));
     }
 
     // from this point onwards, individual is no longer mutable and is considered complete!
@@ -250,5 +227,157 @@ impl Individual {
     pub fn plug_in_core(&mut self, nodes: Vec<Node>) {
         for node in nodes {self.core.push(node);}
     }
+
+}
+
+pub mod variation {
+
+    pub mod standard {
+
+        use core::individual::Individual;
+        use core::data::Data;
+        extern crate rand; use rand::{thread_rng, Rng};
+
+        pub fn crossover(p1: &Individual, p2: &Individual, data: &Data) -> Individual {
+            let mut offspring = Individual::new();
+            let mut rng = thread_rng();
+
+            let xo_point_p1 = rng.gen_range(0, p1.size());
+            let xo_point_p2 = rng.gen_range(0, p2.size());
+
+            let subnodes_p1 = p1.count_subtree_nodes(xo_point_p1);
+            let subnodes_p2 = p2.count_subtree_nodes(xo_point_p2);
+
+            let p1_left_copy = p1.outer_left_copy(xo_point_p1);
+            let p2_subtree_copy = p2.copy_subtree(xo_point_p2, subnodes_p2);
+            let p1_right_copy = p1.outer_right_copy(xo_point_p1 + subnodes_p1);
+
+            offspring.plug_in_core(p1_left_copy);
+            offspring.plug_in_core(p2_subtree_copy);
+            offspring.plug_in_core(p1_right_copy);
+
+            offspring.compute_semantics(data);
+            offspring.evaluate(data);
+            offspring.size = Some(offspring.core.len());
+            offspring.compute_depth();
+            offspring
+        }
+
+        pub fn mutation(p1: &Individual, data: &Data) -> Individual {
+            let mut offspring = Individual::new();
+            let mut rng = thread_rng();
+
+            let mutation_point = rng.gen_range(0, p1.size());
+            let subnodes_p1 = p1.count_subtree_nodes(mutation_point);
+
+            let p1_left_copy = p1.outer_left_copy(mutation_point);
+            let mutation = Individual::grow(6, data);
+            let p1_right_copy = p1.outer_right_copy(mutation_point + subnodes_p1);
+
+            offspring.plug_in_core(p1_left_copy);
+            offspring.plug_in_core(mutation.clone_core());
+            offspring.plug_in_core(p1_right_copy);
+
+            offspring.compute_semantics(data);
+            offspring.evaluate(data);
+            offspring.size = Some(offspring.core.len());
+            offspring.compute_depth();
+            offspring
+        }
+
+    }
+
+    pub mod geometric_semantic {
+
+        use std::cmp::max;
+        use core::individual::Individual;
+        use core::node::Node;
+        use core::utils::{add, subtract, multiply};
+        use core::data::Data;
+
+        pub fn crossover(p1: &Individual, p2: &Individual, data: &Data) -> Individual {
+            let p1_semantics = p1.semantics();
+            let p2_semantics = p2.semantics();
+
+            // the random tree is bounded to [0, 1], hence the log function node prepend
+            // i.e.always bounded for gs crossover
+            let mut r1 = Individual::grow(6, data);
+            r1.prepend_node(Node::LogFunction);
+            r1.compute_depth();
+            r1.compute_semantics(data);
+            let r1_semantics = r1.semantics();
+
+            let train_semantics = gs_crossover_semantics(p1_semantics.0, p2_semantics.0, r1_semantics.0);
+            let test_semantics = gs_crossover_semantics(p1_semantics.1, p2_semantics.1, r1_semantics.1);
+
+            let mut offspring = Individual::new(); // empty in all kinds of info you can think of
+            offspring.train_semantics = Some(train_semantics);
+            offspring.test_semantics = Some(test_semantics);
+            offspring.evaluate(data);
+            offspring.size = Some(calc_xo_offspring_size(p1, p2, &r1));
+            offspring.depth = Some(calc_xo_offspring_depth(p1, p2, &r1));
+            offspring
+        }
+
+        fn gs_crossover_semantics(p1_semantics: Vec<f32>, p2_semantics: Vec<f32>, r1_semantics: Vec<f32>) -> Vec<f32> {
+            // offspring semantics <- t1 * rb + (1 - rb) * t2
+            let n = p1_semantics.len();
+            add(multiply(p1_semantics.to_vec(), r1_semantics.to_vec()), multiply(subtract(vec![1f32; n], r1_semantics.to_vec()), p2_semantics.to_vec()))
+        }
+
+        fn calc_xo_offspring_size(p1: &Individual, p2: &Individual, r1: &Individual) -> usize {
+            p1.size() + p2.size() + r1.size() * 2 + 5
+        }
+
+        fn calc_xo_offspring_depth(p1: &Individual, p2: &Individual, r1: &Individual) -> usize {
+            let deepest = max(p1.depth(), p2.depth());
+            max(deepest + 2, r1.depth() + 3 + 1)
+        }
+
+        pub fn mutation(p1: &Individual, data: &Data, mut_step:f32, bounded_mutation: bool) -> Individual {
+            // Tm = T + ms (r1 - r2)
+            let mut r1 = Individual::grow(6, data);
+            let mut r2 = Individual::grow(6, data);
+            if bounded_mutation {
+                r1.prepend_node(Node::LogFunction);
+                r2.prepend_node(Node::LogFunction);
+            }
+            r1.compute_depth();
+            r1.compute_semantics(data);
+            r2.compute_depth();
+            r2.compute_semantics(data);
+
+            let p1_semantics = p1.semantics();
+            let r1_semantics = r1.semantics();
+            let r2_semantics = r2.semantics();
+
+            let train_semantics = gs_mutation_semantics(p1_semantics.0, r1_semantics.0, r2_semantics.0, mut_step);
+            let test_semantics = gs_mutation_semantics(p1_semantics.1, r1_semantics.1, r2_semantics.1, mut_step);
+
+            let mut offspring = Individual::new(); // empty in all kinds of info you can think of
+            offspring.train_semantics = Some(train_semantics);
+            offspring.test_semantics = Some(test_semantics);
+            offspring.evaluate(data);
+            offspring.size = Some(calc_mut_offspring_size(p1, &r1, &r2));
+            offspring.depth = Some(calc_mut_offspring_depth(p1, &r1, &r2));
+            offspring
+        }
+
+        fn gs_mutation_semantics(p1_sems: Vec<f32>, r1_sems: Vec<f32>, r2_sems: Vec<f32>, mut_step: f32) -> Vec<f32> {
+            let len = r1_sems.len();
+            add(p1_sems.to_vec(), multiply(vec![mut_step; len], subtract(r1_sems.to_vec(), r2_sems.to_vec())))
+        }
+
+        fn calc_mut_offspring_size(p1: &Individual, r1: &Individual, r2: &Individual) -> usize {
+            p1.size() + 3 /* Plus, Constant, Mult */ + r1.size() + 1 + r2.size()
+        }
+
+        fn calc_mut_offspring_depth(p1: &Individual, r1: &Individual, r2: &Individual) -> usize {
+            let max_depth = max(r1.depth(), r2.depth());
+            max(max_depth + 3, p1.depth() + 1)
+        }
+
+    }
+
 
 }

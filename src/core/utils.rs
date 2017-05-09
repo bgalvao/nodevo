@@ -1,4 +1,6 @@
-pub fn rmse(x: Vec<f32>, y: Vec<f32>) -> f32 {
+//////// DO NOT FORGET TO ADD THE LOGISTIC FUNCTION NODE!!!!
+
+pub fn rmse(x: &Vec<f32>, y: &Vec<f32>) -> f32 { // for semantics vs targets
     if x.len() != y.len() {panic!("cannot rmse vectors of different length!");}
     let n = x.len() as f32;
     let mapper = x.into_iter().zip(y.into_iter()).map(|(x,y)| ((x-y) as f32).powi(2));
@@ -24,6 +26,13 @@ pub fn multiply(x: Vec<f32>, y: Vec<f32>) -> Vec<f32> {
 pub fn cosine(x: Vec<f32>) -> Vec<f32> {
     x.into_iter().map(|x| x.cos()).collect()
 }
+
+/// Element-wise logistic function. Mainly for use of the Geometric Semantic Genetic Programming
+pub fn logistic_function(x: Vec<f32>) -> Vec<f32> {
+    let e = |y: f32| -> f32 {1.0 / (1.0 + (-y).exp())};
+    x.into_iter().map(e).collect()
+}
+
 
 pub fn divide(x: Vec<f32>, y: Vec<f32>) -> Vec<f32> {
     if x.len() != y.len() {panic!("cannot divide element-wise vectors of different length!");}

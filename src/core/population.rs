@@ -22,7 +22,6 @@ impl Population {
     pub fn add_individual(&mut self, new_guy: Individual) {
         self.core.push(new_guy);
     }
-    // let's see about mutating an immutable self.
 
     /// Initializes a filled Population using ramped-half-half initialization
     pub fn new_rhh(pop_size: usize, max_init_depth: usize, data: &Data) -> Population {
@@ -42,8 +41,19 @@ impl Population {
                 full_indivs = (((indivs_per_depth as f32) + (remaining_indivs as f32)) / 2.0).ceil() as i32;
             }
             // fill depth group
-            for _ in 0..full_indivs {p.core.push(Individual::full(depth, data.dims(), Some(data)));}
-            for _ in 0..grow_indivs {p.core.push(Individual::grow(depth, data.dims(), Some(data)));}
+            for _ in 0..full_indivs {
+                let mut i = Individual::full(depth, data);
+                i.compute_semantics(data); // only necessary for offline GSGP
+                i.compute_depth(); // only necessary for offline GSGP
+                p.core.push(i);
+            }
+
+            for _ in 0..grow_indivs {
+                let mut i = Individual::grow(depth, data);
+                i.compute_semantics(data); // only necessary for offline GSGP
+                i.compute_depth(); // only necessary for offline GSGP
+                p.core.push(i);
+            }
         }
         p
     }
@@ -58,7 +68,7 @@ impl Population {
         f
     }
 
-    /// There's possibly a closure for this
+    // There's possibly a closure for this
     pub fn tournament_select(&self, pool_size: usize) -> &Individual {
         let mut rng = thread_rng();
         let mut first_guy = &self.core[rng.gen_range(0, self.size())];
@@ -70,4 +80,7 @@ impl Population {
         }
         first_guy
     }
+    // fitness_proportionate_select()
+    // rank_select()
+    // pareto_rank_select()
 }

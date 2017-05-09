@@ -1,18 +1,18 @@
 extern crate rand;
 mod core;
 
-//use core::individual::Individual;
-//use core::node::Node;
-//use core::population::Population;
 use core::gp::GP;
 use core::data::Data;
 
 fn main() {
 
     let ds = Data::new("yacht");
+    let mut gsgp = GP::new_gsgp(ds)
+                    .set_pop_size(150)
+                    .set_pool_size(5)
+                    .set_xo_rate(0.0);
 
-    let mut gp = GP::default_new(ds);
-    gp.init();
-    gp.evolve(100);
+    gsgp.init_new_pop();
+    gsgp.evolve(100);
 
 }

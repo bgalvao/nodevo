@@ -1,3 +1,5 @@
+//////// DO NOT FORGET TO ADD THE LOGISTIC FUNCTION NODE!!!!
+
 use rand::{thread_rng, Rng};
 use core::utils::*;
 
@@ -11,6 +13,7 @@ pub enum Node {
     Multiplication,
     Division,
     Cosine,
+    LogFunction,
     Input(usize),
     Constant(f32),
 }
@@ -21,7 +24,7 @@ impl Node {
         match *self {
             Node::Input(_) => 0,
             Node::Constant(_) => 0,
-            Node::Cosine => 1,
+            Node::Cosine | Node::LogFunction => 1,
             _ => 2,
         }
     }
@@ -34,6 +37,7 @@ impl Node {
             Node::Cosine => cosine(args[0].to_vec()),
             Node::Multiplication => multiply(args[0].to_vec(), args[1].to_vec()),
             Node::Division => divide(args[0].to_vec(), args[1].to_vec()),
+            Node::LogFunction => logistic_function(args[0].to_vec()),
             _ => panic!("Tried to call Node::op() on a non-functional node."),
         }
     }
@@ -48,7 +52,7 @@ impl Node {
     }
 
     /// Gets a random functional node uniformly at random from the functional set
-    /// defined in `enum Node`.
+    /// defined in `enum Node`. LogFunction is considered to be only part of GSGP.
     pub fn get_random_functional() -> Node {
         let mut rng = thread_rng();
         match rng.gen_range(0, 5) { // for now
@@ -67,11 +71,3 @@ impl Node {
         Node::Input(i)
     }
 }
-/*
-pub struct Tree {
-    core: Vec<Node>,
-    size: Option<usize>,
-    depth: Option<usize>,
-}
-
-*/
