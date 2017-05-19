@@ -1,5 +1,3 @@
-//////// DO NOT FORGET TO ADD THE LOGISTIC FUNCTION NODE!!!!
-
 use rand::{thread_rng, Rng};
 use core::utils::*;
 
@@ -19,8 +17,9 @@ pub enum Node {
 }
 
 impl Node {
-
-    pub fn arity(&self) -> usize { // usize
+    /// Returns how many arguments a node takes.
+    pub fn arity(&self) -> usize {
+        // usize
         match *self {
             Node::Input(_) => 0,
             Node::Constant(_) => 0,
@@ -29,8 +28,11 @@ impl Node {
         }
     }
 
+    /// performs operation of node on the args.
     pub fn op(&self, args: Vec<Vec<f32>>) -> Vec<f32> {
-        if self.arity() != args.len() {panic!("Number of args does not match node's arity.")}
+        if self.arity() != args.len() {
+            panic!("Number of args does not match node's arity.")
+        }
         match *self {
             Node::Addition => add(args[0].to_vec(), args[1].to_vec()),
             Node::Subtraction => subtract(args[0].to_vec(), args[1].to_vec()),

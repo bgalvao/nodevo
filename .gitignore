@@ -2,3 +2,4 @@
 datasets/bio/
 datasets/fire/
 design_decisions.txt
+*.bk
