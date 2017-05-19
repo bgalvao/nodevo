@@ -6,19 +6,16 @@ use core::gp::GP;
 use core::data::Data;
 use core::multi_gp::Mgp;
 
-
-use rayon::prelude::*;
-
 fn main() {
 
     let ds = Data::new("yacht");
 
-    let mut gp1 = GP::new_gp(ds.clone())
+    let gp1 = GP::new_gp(ds.clone())
         .set_pop_size(25)
         .set_pool_size(3)
         .set_xo_rate(0.5);
 
-    let mut gp2 = GP::new_gp(ds)
+    let gp2 = GP::new_gp(ds)
         .set_pop_size(25)
         .set_pool_size(3)
         .set_xo_rate(0.5);
