@@ -1,4 +1,4 @@
-# Rusty Genetic Programming (rusty-gp)
+# Nodevo
 An implementation of Genetic Programming in Rust. This one pertains to symbolic regression.
 
 ## OK, but what in the world is Genetic Programming?
@@ -11,10 +11,9 @@ Yes you can. I included the [yacht dataset](http://archive.ics.uci.edu/ml/datase
 
 ## How to get this running?
 After [installing](https://www.rust-lang.org/en-US/install.html) Rust on your machine, clone this repo, `cd` into it and run the commands. Something like:
-```
-# only clone last commit!
-git clone --depth 1 https://github.com/bravo-9/rusty-gp.git
-cd rusty-gp
+```bash
+git clone https://github.com/bgalvao/nodevo.git
+cd nodevo
 cargo build --release
 cargo run
 ```
@@ -74,7 +73,7 @@ mgp.evolve_in_parallel(3, 30);
 ```
 
 ## Notes from the author
-I just started out programming in [Rust](www.rust-lang.org) and the best way to learn a new programming language is to implement something in it. Since I am mostly acquainted with Genetic Programming and am researching in it, I thought this would be the best way to learn it. That being said, this is a work in progress - with time and knowledge optimize the code will be optimized. Thanks to the [community](www.reddit.com/r/rust).
+I just started out programming in [Rust](www.rust-lang.org) and the best way to learn a new programming language is to implement something in it. Since I am mostly acquainted with Genetic Programming and am researching in it, I thought this would be the best way to learn it. That being said, this is a work in progress - with time and knowledge the code will be optimized. Thanks to the [community](www.reddit.com/r/rust).
 
 ## TODO
 The top priorities are opened in the [Issues](https://github.com/bernardo-galvao/rusty-gp/issues) section. However, given that the author has some goals related to his thesis, it is worth pointing out his plan and expectable features here.
