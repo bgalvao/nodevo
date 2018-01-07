@@ -1,5 +1,5 @@
 # Nodevo
-An implementation of Genetic Programming in Rust. This one pertains to symbolic regression.
+An implementation of Genetic Programming in Rust. This one pertains to symbolic regression. This is supposed to become a flexible library and a better implementation of the work of my thesis (which slides are found [here](https://docs.google.com/presentation/d/1-T-MNxm-bCozN1VtoF7VLlWRhL_eEkn-U5fpIf8s10U/edit?usp=sharing))
 
 ## OK, but what in the world is Genetic Programming?
 It's an evolutionary supervised machine learning algorithm. It evolves a population of programs (in this case, a mathematical function) that best maps inputs to outputs.
